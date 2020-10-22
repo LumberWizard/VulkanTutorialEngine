@@ -1,0 +1,6 @@
+
+*.log
+
+VulkanEngine/x64
+VulkanEngine/VulkanEngine/x64
+VulkanEngine/.vs
