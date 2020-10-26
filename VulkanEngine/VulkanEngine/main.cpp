@@ -66,6 +66,10 @@ struct QueueFamilyIndices {
 	}
 
 	inline bool separateGraphicsTransferQueues() {
+		return transferFamily.value() != graphicsFamily.value();
+	}
+
+	inline bool hasExplicitTransferQueueIndex() {
 		return transferFamily.has_value();
 	}
 
@@ -367,8 +371,13 @@ private:
 		score += deviceProperties.limits.maxImageDimension2D;
 
 		// A physical device that supports drawing and presentation in the same queue offers improved performance.
-		if (indices.familiesOptimized()) {
-			score += 1000;
+		if (indices.mixedGraphicsPresentQueue()) {
+			score += 750;
+		}
+
+		// Similarly, a device with a transfer queue separate from the graphics queue offer improved performance.
+		if (indices.separateGraphicsTransferQueues()) {
+			score += 750;
 		}
 
 		// Discrete GPUs have a significant performance advantage
@@ -398,12 +407,12 @@ private:
 					indices.presentFamily = i;
 			}
 
-			if (!indices.separateGraphicsTransferQueues() && !(queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) && queueFamily.queueFlags & VK_QUEUE_TRANSFER_BIT) {
+			if (!indices.hasExplicitTransferQueueIndex() && !(queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) && queueFamily.queueFlags & VK_QUEUE_TRANSFER_BIT) {
 				indices.transferFamily = i;
 			}
 			if (indices.familiesOptimized()) return indices;
 		}
-		if (!indices.separateGraphicsTransferQueues())
+		if (!indices.hasExplicitTransferQueueIndex())
 			indices.transferFamily = indices.graphicsFamily;
 
 		return indices;
